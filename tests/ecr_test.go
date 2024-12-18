@@ -2,22 +2,29 @@ package tests
 
 import (
 	"testing"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccECRRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { /* Pre-check logic */ },
+		Provider: map[string]func() *schema.Provider {
+			"aws": func() *schema.Provider {
+				return awsProvider() 
+			},
+			"ecr": func() *schema.Provider {
+				return ecrProvider()
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: `
 					provider "aws" {
-						region "us-east-1"
+						region = "us-east-1"
 					}
 
 					resource "aws_ecr_repository" "test" {
-						name "test-repo"
+						name = "test-repo"
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -25,5 +32,6 @@ func TestAccECRRepository(t *testing.T) {
 				),
 			},
 		},
-	})
+	}),
 }
+
