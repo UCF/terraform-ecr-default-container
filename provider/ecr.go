@@ -22,3 +22,15 @@ func resourceECRRepository() *schema.Resource {
 func resourceECRRepositoryCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
+
+func resourceECRRepositoryRead(d *schema.ResourceData, m interface{}) error {
+	return nil
+}
+
+func resourceECRRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
+	return nil
+}
+
+func resourceECRRepositoryDelete(d *schema.ResourceData, m interface{}) error {
+	return nil
+}
