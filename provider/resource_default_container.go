@@ -1,4 +1,4 @@
-package providers
+package provider
 
 func PushDefaultContainer(repoName string) error {
 	return nil

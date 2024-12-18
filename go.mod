@@ -3,6 +3,7 @@ module github.com/UCF/terraform-ecr-default-container
 go 1.23.2
 
 require (
+	github.com/hashicorp/terraform-plugin-aws v1.81.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.35.0
 	github.com/stretchr/testify v1.8.3
 )
@@ -49,7 +50,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/zclconf/go-cty v1.15.0 // indirect
-	golang.org/x/crypto v0.28.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
