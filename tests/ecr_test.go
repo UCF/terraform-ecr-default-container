@@ -2,15 +2,17 @@ package tests
 
 import (
 	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func TestAccECRRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { /* Pre-check logic */ },
-		Provider: map[string]func() *schema.Provider {
+		Provider: map[string]func() *schema.Provider{
 			"aws": func() *schema.Provider {
-				return awsProvider() 
+				return awsProvider()
 			},
 			"ecr": func() *schema.Provider {
 				return ecrProvider()
@@ -32,6 +34,5 @@ func TestAccECRRepository(t *testing.T) {
 				),
 			},
 		},
-	}),
+	})
 }
-
