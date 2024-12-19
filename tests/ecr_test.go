@@ -10,30 +10,27 @@ import (
 
 func TestAccECRRepository(t *testing.T) {
 	resourceName := "aws_ecr_repository.test"
+	repoName := "test-repo"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { /* Pre-check logic */ },
 		Providers: map[string]*schema.Provider{
-			"aws": provider.Provider(),
+			"aws": provider.AWSProvider(),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testAccECRRepositoryConfig(),
+				Config: testAccECRRepositoryConfig(repoName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test-repo"),
+					resource.TestCheckResourceAttr(resourceName, "name", repoName),
 				),
 			},
 		},
 	})
 }
 
-func testAccECRRepositoryConfig() string {
+func testAccECRRepositoryConfig(repoName string) string {
 	return `
-	provider "aws" {
-		region = "us-east-1"
-	}
-
 	resource "aws_ecr_repository" "test" {
-		name = "test-repo"
+		name = "` + repoName + `"
 	}`
 }

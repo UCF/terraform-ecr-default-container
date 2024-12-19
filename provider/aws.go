@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func Provider() *schema.Provider {
+func AWSProvider() *schema.Provider {
 	return &schema.Provider{
 		ResourcesMap: map[string]*schema.Resource{
 			"aws_ecr_repository": resourceECRRepository(),
@@ -20,7 +20,7 @@ func Provider() *schema.Provider {
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	//Load AWS configuration
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"))
 	if err != nil {
 		log.Fatalf("failed to load configuration, %v", err)
 	}
