@@ -5,27 +5,28 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func Provider() *schema.Provider {
+	return &schema.Provider{
+		ResourcesMap: map[string]*schema.Resource{
+			"aws_ecr_repository": resourceECRRepository(),
+		},
+		ConfigureFunc: configureProvider,
+	}
+}
 
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"))
-
+func configureProvider(d *schema.ResourceData) (interface{}, error) {
+	//Load AWS configuration
+	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		log.Fatalf("failed to load configuration, %v", err)
 	}
 
-	return &schema.Provider{
-		Schema: map[string]*schema.Schema{
-			"region": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"profile": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-		},
-	}
+	// Create the ECR client
+	client := ecr.NewFromConfig(cfg)
+
+	return client, nil
 }
