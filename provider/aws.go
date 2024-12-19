@@ -2,7 +2,7 @@ package provider
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -22,11 +22,9 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	//Load AWS configuration
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"))
 	if err != nil {
-		log.Fatalf("failed to load configuration, %v", err)
+		return nil, fmt.Errorf("failed to load configuration, %w", err)
 	}
 
 	// Create the ECR client
-	client := ecr.NewFromConfig(cfg)
-
-	return client, nil
+	return ecr.NewFromConfig(cfg), nil
 }

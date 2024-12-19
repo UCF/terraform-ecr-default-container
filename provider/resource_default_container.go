@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -33,10 +32,24 @@ func resourceDefaultContainer() *schema.Resource {
 			"repository_url": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if !isValidRepoURL(v) {
+						errs = append(errs, fmt.Errorf("%q must be a valid repository URL, got: %s", key, v))
+					}
+					return
+				},
 			},
 			"image": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if !isValidImageName(v) {
+						errs = append(errs, fmt.Errorf("%q must be a valid image name, got: %s", key, v))
+					}
+					return
+				},
 			},
 			"repository_name": {
 				Type:     schema.TypeString,
@@ -51,26 +64,11 @@ func resourceDefaultContainerCreate(d *schema.ResourceData, m interface{}) error
 	repoURL := d.Get("repository_url").(string)
 
 	// Extract the repository name from the repository URL
-	// Assuming the URL format is "<repo-name>.dkr.ecr.<region>.amazonaws.com"
-	parts := strings.Split(repoURL, ".")
-	if len(parts) < 3 {
-		return fmt.Errorf("invalid repository URL format: %s", repoURL)
-	}
-	repoName := parts[0] // This is the repository name
+	parts := strings.Split(repoURL, "/")
+	repoName := parts[len(parts)-1]
 
 	// Set the repository_name in the resource data
 	d.Set("repository_name", repoName)
-
-	sess, err := session.NewSession()
-	if err != nil {
-		return fmt.Errorf("failed to create AWS session: %v", err)
-	}
-
-	svc := sts.New(sess)
-	_, err = svc.GetCallerIdentity(&sts.GetCallerIdentityInput{})
-	if err != nil {
-		return fmt.Errorf("failed to get caller identity: %v", err)
-	}
 
 	region := "us-east-1"
 
@@ -85,7 +83,12 @@ func resourceDefaultContainerCreate(d *schema.ResourceData, m interface{}) error
 
 	pullCommand := fmt.Sprintf("podman pull %s", image)
 	if err := exec.Command("bash", "-c", pullCommand).Run(); err != nil {
-		return fmt.Errorf("failed to pull image: %v", err)
+		return fmt.Errorf("failed to pull image with command: %s %v", pullCommand, err)
+	}
+
+	pushCommand := fmt.Sprintf("podman push %s", repoURL)
+	if err := exec.Command("bash", "-c", pushCommand).Run(); err != nil {
+		return fmt.Errorf("failed to push image to ECR with command: %s %v", pushCommand, err)
 	}
 
 	d.SetId(image)
@@ -106,11 +109,8 @@ func resourceDefaultContainerDelete(d *schema.ResourceData, m interface{}) error
 	repoURL := d.Get("repository_url").(string)
 	image := d.Get("image").(string)
 
-	parts := strings.Split(repoURL, ".")
-	if len(parts) < 3 {
-		return fmt.Errorf("invalid repository URL format: %s", repoURL)
-	}
-	repoName := parts[0]
+	parts := strings.Split(repoURL, "/")
+	repoName := parts[len(parts)-1]
 
 	input := &ecr.BatchDeleteImageInput{
 		RepositoryName: &repoName,
@@ -128,4 +128,16 @@ func resourceDefaultContainerDelete(d *schema.ResourceData, m interface{}) error
 
 	d.SetId("")
 	return nil
+}
+
+func isValidImageName(imageName string) bool {
+	// Simple regex to validate image name format
+	var validImageName = regexp.MustCompile(`^[a-zA-Z0-9._-]+(:[a-zA-Z0-9._-]+)?$`)
+	return validImageName.MatchString(imageName)
+}
+
+func isValidRepoURL(repoURL string) bool {
+	// Simple regex to validate repository URL format
+	var validRepoURL = regexp.MustCompile(`^[a-zA-Z0-9._-]+\.dkr\.ecr\.[a-zA-Z0-9-]+\.amazonaws\.com/[a-zA-Z0-9._-]+$`)
+	return validRepoURL.MatchString(repoURL)
 }
